@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-
 public class GraphEditor : MonoBehaviour
 {
 
@@ -25,6 +24,7 @@ public class GraphEditor : MonoBehaviour
     public TextMeshProUGUI maxTemperatureText;
     public TextMeshProUGUI minTemperatureText;
 
+    public List<GameObject> cursorList = new List<GameObject>();
 
     private void Start()
     {
@@ -32,13 +32,23 @@ public class GraphEditor : MonoBehaviour
 
         Debug.Log(metingCoreOriginAngle);
 
-        for (int i = 0; i < 11; i++)
+        for (int i = 0; i < 720; i++)
         {
-            displayPointList_A[i]  = Random.Range(0, 500);
-            displayPointList_B[i]  = Random.Range(0, 500);
-            displayPointList_C[i]  = Random.Range(0, 500);
-            displayPointList_D[i]  = Random.Range(0, 500);
+            displayPointList_A.Add(0);
+            displayPointList_B.Add(0);
+            displayPointList_C.Add(0);
+            displayPointList_D.Add(0);
         }
+
+        for (int i = 0; i < 720; i++)
+        {
+            displayPointList_A[i]  = Random.Range(0, 1000);
+            displayPointList_B[i]  = Random.Range(0, 1000);
+            displayPointList_C[i]  = Random.Range(0, 1000);
+            displayPointList_D[i]  = Random.Range(0, 1000);
+        }
+
+        CandleChartData.SetHorizontalViewSize(displayPointList_A.Count * 0.00277778);
     }
 
     [Header ("Setting")]
@@ -67,12 +77,23 @@ public class GraphEditor : MonoBehaviour
 
     IEnumerator DisplayPointAll()
     {
-        for (int i = 0; i < displayPointList_A.Count; i++)
+        for (int i = 0; i < 21; i++)
         {
-            chart.DataSource.AddPointToCategoryRealtime("PointA", i, displayPointList_A[i], changeValueTime);
-            chart.DataSource.AddPointToCategoryRealtime("PointB", i, displayPointList_B[i], changeValueTime);
-            chart.DataSource.AddPointToCategoryRealtime("PointC", i, displayPointList_C[i], changeValueTime);
-            chart.DataSource.AddPointToCategoryRealtime("PointD", i, displayPointList_D[i], changeValueTime);
+            int point;
+
+            if (i == 20)
+            {
+                point = displayPointList_A.Count - 1;
+            }
+            else
+            {
+                point = (int)displayPointList_A.Count / 20 * i;
+            }
+
+            chart.DataSource.AddPointToCategoryRealtime("PointA", point * 0.00277778, displayPointList_A[point], changeValueTime);
+            chart.DataSource.AddPointToCategoryRealtime("PointB", point * 0.00277778, displayPointList_B[point], changeValueTime);
+            chart.DataSource.AddPointToCategoryRealtime("PointC", point * 0.00277778, displayPointList_C[point], changeValueTime);
+            chart.DataSource.AddPointToCategoryRealtime("PointD", point * 0.00277778, displayPointList_D[point], changeValueTime);
 
             StartCoroutine(ChangeCoilIntencity(i));
 
@@ -89,6 +110,7 @@ public class GraphEditor : MonoBehaviour
             yield return new WaitUntil(() => !Input.GetMouseButton(0));
             yield return new WaitUntil(() => cylinderTurn);
 
+            DeletePointAnim();
             //cylender.transform.Rotate(Vector3.up * Time.deltaTime * 20, Space.World);
             meltingCore.transform.Rotate(new Vector3(0f, 1f, 0f));
             yield return null;
@@ -132,6 +154,7 @@ public class GraphEditor : MonoBehaviour
 
             if (isClickCore)
             {
+                DeletePointAnim();
 
                 curMousePos = Input.mousePosition;
 
@@ -160,17 +183,18 @@ public class GraphEditor : MonoBehaviour
     public void ResetCore()
     {
         //meltingCore.transform.rotation = Quaternion.Euler(0f, 0f, 180f);
-        Debug.Log("½ÇÇàµÊ");
+        cylinderTurn = false;
         meltingCore.transform.rotation = Quaternion.Euler(metingCoreOriginAngle);
         minTemperatureText.text = "";
         maxTemperatureText.text = "";
+
+        StartPointAnim();
     }
 
     public void AutoTurn()
     {
         cylinderTurn = !cylinderTurn;
     }
-
 
     private Color lastCoilAEmission = Color.red;
     private Color lastCoilBEmission = Color.red;
@@ -188,10 +212,10 @@ public class GraphEditor : MonoBehaviour
 
         for (int i = 0; i < 100; i++)
         {
-            coilAEmission = Color.red * displayPointList_A[number];
-            coilBEmission = Color.red * displayPointList_B[number];
-            coilCEmission = Color.red * displayPointList_C[number];
-            coilDEmission = Color.red * displayPointList_D[number];
+            coilAEmission = Color.red * (displayPointList_A[number] * 0.2f);
+            coilBEmission = Color.red * (displayPointList_B[number] * 0.2f);
+            coilCEmission = Color.red * (displayPointList_C[number] * 0.2f);
+            coilDEmission = Color.red * (displayPointList_D[number] * 0.2f);
 
             coilAMesh.material.SetColor("_EmissiveColor", Color.red * lastCoilAEmission - (lastCoilAEmission - coilAEmission) * i * 0.01f);
             coilBMesh.material.SetColor("_EmissiveColor", Color.red * lastCoilBEmission - (lastCoilBEmission - coilBEmission) * i * 0.01f);
@@ -253,6 +277,28 @@ public class GraphEditor : MonoBehaviour
 
         maxTemperatureText.text = maxValue + "¡ÆC";
         minTemperatureText.text = minValue + "¡ÆC";
+    }
+
+    public void StartPointAnim()
+    {
+        for (int i = 0; i < cursorList.Count; i++)
+        {
+            cursorList[i].SetActive(true);
+            cursorList[i].GetComponent<Animator>().SetTrigger("Reset");
+        }
+    }
+
+    public void DeletePointAnim()
+    {
+        if (!cursorList[0].activeSelf)
+        {
+            return;
+        }
+
+        for (int i = 0; i < cursorList.Count; i++)
+        {
+            cursorList[i].SetActive(false);
+        }
     }
 
     // Update is called once per frame

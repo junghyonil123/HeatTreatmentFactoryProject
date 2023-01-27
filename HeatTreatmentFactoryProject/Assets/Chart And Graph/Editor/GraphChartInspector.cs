@@ -359,7 +359,7 @@ namespace ChartAndGraph
             if (automatic == false)
             {
                 EditorGUILayout.PropertyField(horizontalOrigin);
-                EditorGUILayout.PropertyField(horizontalSize);
+                //EditorGUILayout.PropertyField(horizontalSize);
                 //  if (horizontalSize.doubleValue < 0.0)
                 //      horizontalSize.doubleValue = 0.0001;
             }

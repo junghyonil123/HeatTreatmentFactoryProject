@@ -1,3 +1,4 @@
+using ChartAndGraph;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,8 @@ public class GameManager : MonoBehaviour
     public GameObject UiCam;
     public GameObject graph;
 
+
+    [HideInInspector]
     public Camera mainCamera;
 
     private void Awake()
@@ -22,8 +25,9 @@ public class GameManager : MonoBehaviour
     {
         if (graph.activeSelf)
         {
-            graph.SetActive(false);
+            //graph.SetActive(false);
         }
+
     }
 
     private void Update()
@@ -37,7 +41,7 @@ public class GameManager : MonoBehaviour
         mainCam.SetActive(false);
         mainCamera = UiCam.GetComponent<Camera>();
 
-        graph.SetActive(true);
+        //graph.SetActive(true);
         graph.GetComponent<GraphEditor>().Display();
     }
 

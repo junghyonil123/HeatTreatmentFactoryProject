@@ -12,13 +12,19 @@ public class CameraMove : MonoBehaviour
     private Camera cam;
     private Vector3 anchorPoint;
     private Quaternion anchorRot;
+    public float detectWallDistance = 100;
 
     private bool isPanning;
     private void Awake()
     {
         cam = GetComponent<Camera>();
+        rig = GetComponent<Rigidbody>();
+    
     }
-    void Update()
+
+    Rigidbody rig;
+
+    void FixedUpdate()
     {
         MousePanning();
         if (isPanning)
@@ -27,20 +33,33 @@ public class CameraMove : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             Vector3 move = Vector3.zero;
+            rig.velocity = Vector3.zero;
             float speed = navigationSpeed * (Input.GetKey(KeyCode.LeftShift) ? shiftMultiplier : 1f) * Time.deltaTime * 9.1f;
             if (Input.GetKey(KeyCode.W))
-                move += Vector3.forward * speed;
+            {
+                rig.AddForce(transform.forward * speed * 1000);
+            }
             if (Input.GetKey(KeyCode.S))
-                move -= Vector3.forward * speed;
+            {
+                rig.AddForce(-transform.forward * speed * 1000);
+            }
             if (Input.GetKey(KeyCode.D))
-                move += Vector3.right * speed;
+            {
+                rig.AddForce(transform.right * speed * 1000);
+            }
             if (Input.GetKey(KeyCode.A))
-                move -= Vector3.right * speed;
-            if (Input.GetKey(KeyCode.E))
-                move += Vector3.up * speed;
-            if (Input.GetKey(KeyCode.Q))
-                move -= Vector3.up * speed;
-            transform.Translate(move);
+            {
+                rig.AddForce(-transform.right * speed * 1000);
+            }
+
+            //Debug.DrawRay(transform.position, move);
+
+            //if (!Physics.Raycast(transform.position, move, detectWallDistance))
+            //{
+
+            //rig.velocity = Vector3.zero;
+            //rig.AddForce(move * 1000);
+            //transform.Translate(move);
         }
         if (Input.GetMouseButtonDown(1))
         {
