@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Inatance;
+    public static GameManager Insatance;
 
     public GameObject mainCam;
     public GameObject uiCam;
@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        Inatance = this;
+        Insatance = this;
         mainCamera = Camera.main;
     }
 
@@ -36,6 +36,8 @@ public class GameManager : MonoBehaviour
         ClickMachine();
     }
 
+    public bool isGraphOn = false;
+
     void OpenGraph()
     {
         uiCam.SetActive(true);
@@ -43,15 +45,23 @@ public class GameManager : MonoBehaviour
         mainCamera = uiCam.GetComponent<Camera>();
 
         //graph.SetActive(true);
+        isGraphOn = true;
         graph.GetComponent<GraphEditor>().Display();
+        //graph.GetComponent<GraphEditor>().SetDefaultValue();
     }
 
     public void CloseGraph()
     {
+        //if (GraphEditor.isOnDisplayPoint)
+        //{
+        //    return;
+        //}
+
         uiCam.SetActive(false);
         mainCam.SetActive(true);
         mainCamera = mainCam.GetComponent<Camera>();
 
+        isGraphOn = false;
         //graph.SetActive(false);
     }
 

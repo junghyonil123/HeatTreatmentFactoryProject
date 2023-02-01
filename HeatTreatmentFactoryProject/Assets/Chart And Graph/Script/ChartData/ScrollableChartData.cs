@@ -110,7 +110,7 @@ namespace ChartAndGraph
         }
 
         [SerializeField]
-        private static double horizontalViewSize = 100;
+        private double horizontalViewSize = 100;
 
         /// <summary>
         /// Mannualy set the horizontal view size.
@@ -125,10 +125,10 @@ namespace ChartAndGraph
             }
         }
 
-        public static void SetHorizontalViewSize(double value)
-        {
-            horizontalViewSize = value;
-        }
+        //public static void SetHorizontalViewSize(double value)
+        //{
+        //    horizontalViewSize = value;
+        //}
 
         [SerializeField]
         private double horizontalViewOrigin = 0;

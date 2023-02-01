@@ -9,7 +9,8 @@ namespace ChartAndGraph
     public enum ChartDivisionAligment
     {
         /// <summary>
-        /// left for vertical axis and top for horizontal axis
+        /// left for 
+        /// and top for horizontal axis
         /// </summary>
         Standard = 1,
         /// <summary>

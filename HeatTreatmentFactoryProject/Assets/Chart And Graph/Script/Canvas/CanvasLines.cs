@@ -303,10 +303,10 @@ namespace ChartAndGraph
             mMinModifyIndex = 0;
             SetAllDirty();
             ClearEvents(); // clear previous animations
-            if(EnableOptimization)
-                Rebuild(CanvasUpdate.PostLayout);
-            else
-                Rebuild(CanvasUpdate.PreRender);
+            //if(EnableOptimization)
+            //    Rebuild(CanvasUpdate.PostLayout);
+            //else
+            //    Rebuild(CanvasUpdate.PreRender);
         }
 
         protected override void UpdateMaterial()

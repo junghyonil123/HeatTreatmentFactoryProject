@@ -45,7 +45,16 @@ namespace ChartAndGraph
         {
             try
             {
-                return string.Format(format, val);
+                return string.Format(format, MathF.Truncate((float)val));
+                //if (val == 0)
+                //{
+                //    Debug.Log(string.Format(format, MathF.Truncate((float)val)));
+                //    return string.Format(format, MathF.Truncate((float)val));
+                //}
+                //else
+                //{
+                //    return string.Format(format, val);
+                //}
             }
             catch
             {
@@ -63,7 +72,10 @@ namespace ChartAndGraph
         public string FormatFractionDigits(int digits,double val, Func<double, int, string> format = null)
         {
             if(format == null)
+            {
+                //Debug.Log("포맷이 널입니다");
                 return InnerFormat(getFormat(digits), val);
+            }
             return format(val, digits);
         }
 

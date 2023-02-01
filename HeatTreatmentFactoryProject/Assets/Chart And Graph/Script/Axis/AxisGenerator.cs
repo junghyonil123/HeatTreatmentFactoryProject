@@ -80,6 +80,7 @@ namespace ChartAndGraph.Axis
 
                     }
                     toSet = data.info.TextPrefix + toSet + data.info.TextSuffix;
+                    Debug.Log(toSet);
                     ChartCommon.UpdateTextParams(text.UIText, toSet);
                 }
             }

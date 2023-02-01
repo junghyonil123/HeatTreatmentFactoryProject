@@ -271,6 +271,9 @@ namespace ChartAndGraph
                                         toSet = ChartDateUtility.DateToTimeString(date);
                                 }
                             }
+
+                            
+
                             toSet = info.TextPrefix + toSet + info.TextSuffix;
                             mFormats[val] = toSet;
 
@@ -425,7 +428,10 @@ namespace ChartAndGraph
                 mesh.AddXYRect(r, group, AutoAxisDepth);
                 if (hasValues)
                 {
-                    double val = Math.Round(current*1000.0)/1000.0;
+                    //double val = Math.Round(current*1000.0)/1000.0;
+                    double val = current*1000.0/1000.0;
+                    //Debug.Log("current = " + current);
+                    //Debug.Log("val = " + val);
                     string toSet = "";
                     double keyVal = val;// (int)Math.Round(val);
                     var dic = (orientation == ChartOrientation.Horizontal) ? parent.HorizontalValueToStringMap : parent.VerticalValueToStringMap;
@@ -434,7 +440,10 @@ namespace ChartAndGraph
                         if (mFormats.TryGetValue(val, out toSet) == false)
                         {
                             if (format == AxisFormat.Number)
+                            {
                                 toSet = ChartAdancedSettings.Instance.FormatFractionDigits(info.FractionDigits, val, parent.CustomNumberFormat);
+                                //Debug.Log("toSet = "+ toSet);
+                            }
                             else
                             {
                                 DateTime date = ChartDateUtility.ValueToDate(val);
@@ -448,7 +457,30 @@ namespace ChartAndGraph
                                         toSet = ChartDateUtility.DateToTimeString(date);
                                 }
                             }
-                            toSet = info.TextPrefix + toSet + info.TextSuffix;
+
+                            //Debug.Log(info.TextSuffix);
+                            if (info.TextSuffix == "0s")
+                            {
+                                //Debug.Log("이거실행안하죠?");
+                                if (val >= 6 && val < 360)
+                                {
+                                //    toSet = (int)val / 6 + "m " + (int)val % 6 + "0s";
+                                    toSet = (int)val / 6 + "m ";
+                                }
+                                else if (val >= 360)
+                                {
+                                    //toSet = (int)val / 360 + "h " + (int)val % 60 + "m " + (int)val % 6 + "0s";
+                                    toSet = (int)val / 360 + "h ";
+                                }
+                                else
+                                {
+                                    toSet = info.TextPrefix + toSet + info.TextSuffix;
+                                }
+                            }
+                            else
+                            {
+                                toSet = info.TextPrefix + toSet + info.TextSuffix;
+                            }
                             mFormats[val] = toSet;
                             
                         }

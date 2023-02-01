@@ -30,9 +30,9 @@ public class GraphEditor : MonoBehaviour
     {
         metingCoreOriginAngle = meltingCore.transform.rotation.eulerAngles;
 
-        Debug.Log(metingCoreOriginAngle);
+        //Debug.Log(metingCoreOriginAngle);
 
-        for (int i = 0; i < 720; i++)
+        for (int i = 0; i < graphNum; i++)
         {
             displayPointList_A.Add(0);
             displayPointList_B.Add(0);
@@ -40,24 +40,48 @@ public class GraphEditor : MonoBehaviour
             displayPointList_D.Add(0);
         }
 
-        for (int i = 0; i < 720; i++)
+        for (int i = 1; i < graphNum; i++)
         {
-            displayPointList_A[i]  = Random.Range(0, 1000);
-            displayPointList_B[i]  = Random.Range(0, 1000);
-            displayPointList_C[i]  = Random.Range(0, 1000);
-            displayPointList_D[i]  = Random.Range(0, 1000);
+
+            if (i <= graphNum / 2)
+            {
+                displayPointList_A[i] = Mathf.Clamp(displayPointList_A[i-1] + Random.Range(0, 2), 0, 999);
+                displayPointList_C[i] = Mathf.Clamp(displayPointList_C[i-1] + Random.Range(0, 2), 0, 999);
+                displayPointList_D[i] = Mathf.Clamp(displayPointList_D[i-1] + Random.Range(0, 2), 0, 999);
+                displayPointList_B[i] = Mathf.Clamp(displayPointList_B[i-1] + Random.Range(0, 2), 0, 999);
+            }
+            else
+            {
+                displayPointList_A[i] = Mathf.Clamp(displayPointList_A[i - 1] + Random.Range(-1, 1), 0, 999);
+                displayPointList_C[i] = Mathf.Clamp(displayPointList_C[i - 1] + Random.Range(-1, 1), 0, 999);
+                displayPointList_D[i] = Mathf.Clamp(displayPointList_D[i - 1] + Random.Range(-1, 1), 0, 999);
+                displayPointList_B[i] = Mathf.Clamp(displayPointList_B[i - 1] + Random.Range(-1, 1), 0, 999);
+            }
+            
         }
 
-        CandleChartData.SetHorizontalViewSize(displayPointList_A.Count * 0.00277778);
+        SetDefaultCoreMesh();
+
+        //CandleChartData.SetHorizontalViewSize(displayPointList_A.Count * 0.00277778);
+
+
+        StartCoroutine(CylenderTurnUseMouse());
+        StartCoroutine(CylenderTurn());
     }
 
     [Header ("Setting")]
     public bool cylinderTurn = false;
     public float rotateSpeed;
-
+    public float graphNum;
     private float changeValueTime = 0.5f;
+
     public void Display()
     {
+        if (isOnDisplayPoint)
+        {
+            return;
+        }
+
         chart.DataSource.StartBatch();
 
         ResetCore();
@@ -67,42 +91,124 @@ public class GraphEditor : MonoBehaviour
         chart.DataSource.ClearCategory("PointC");
         chart.DataSource.ClearCategory("PointD");
 
-        StartCoroutine(DisplayPointAll());
-        StartCoroutine(CylenderTurnUseMouse());
+        Debug.Log("실행");
 
-        StartCoroutine(CylenderTurn());
+        StartCoroutine(DisplayPointAll());
         
         chart.DataSource.EndBatch();
     }
 
+    public static bool isOnDisplayPoint = false;
+
+
+    public void SetDefaultValue()
+    {
+        Debug.Log(iCount);
+
+        if (iCount < 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < iCount; i++)
+        {
+            chart.DataSource.AddPointToCategory("PointA", i, displayPointList_A[i]);
+            chart.DataSource.AddPointToCategory("PointB", i, displayPointList_B[i]);
+            chart.DataSource.AddPointToCategory("PointC", i, displayPointList_C[i]);
+            chart.DataSource.AddPointToCategory("PointD", i, displayPointList_D[i]);
+        }
+    }
+
+    public int iCount = 0;
     IEnumerator DisplayPointAll()
     {
-        for (int i = 0; i < 21; i++)
+        isOnDisplayPoint = true;
+
+        Debug.Log("리셋");
+        maxValue = 0;
+        minValue = 9999;
+
+        for (int i = 0; i < 2001; i++)
         {
             int point;
 
-            if (i == 20)
+            if (i == 2001)
             {
                 point = displayPointList_A.Count - 1;
             }
             else
             {
-                point = (int)displayPointList_A.Count / 20 * i;
+                point = (int)(displayPointList_A.Count / 2000 * i);
             }
 
-            chart.DataSource.AddPointToCategoryRealtime("PointA", point * 0.00277778, displayPointList_A[point], changeValueTime * 2);
-            chart.DataSource.AddPointToCategoryRealtime("PointB", point * 0.00277778, displayPointList_B[point], changeValueTime * 2);
-            chart.DataSource.AddPointToCategoryRealtime("PointC", point * 0.00277778, displayPointList_C[point], changeValueTime * 2);
-            chart.DataSource.AddPointToCategoryRealtime("PointD", point * 0.00277778, displayPointList_D[point], changeValueTime * 2);
+            chart.DataSource.AddPointToCategoryRealtime("PointA", point, displayPointList_A[point], changeValueTime * 2);
+            chart.DataSource.AddPointToCategoryRealtime("PointB", point, displayPointList_B[point], changeValueTime * 2);
+            chart.DataSource.AddPointToCategoryRealtime("PointC", point, displayPointList_C[point], changeValueTime * 2);
+            chart.DataSource.AddPointToCategoryRealtime("PointD", point, displayPointList_D[point], changeValueTime * 2);
 
-            Debug.Log("코루틴 실행");
             StartCoroutine(ChangeCoilIntencity(i));
 
             yield return new WaitForSeconds(1f);
             yield return new WaitUntil(() => !isOnChangeCoilIntencity);
+            yield return new WaitUntil(() => GameManager.Insatance.isGraphOn);
+
+            if (breakDisplayPointCoroutine)
+            {
+                breakDisplayPointCoroutine = false;
+                isOnDisplayPoint = false;
+                yield break;
+            }
+
+            SetValueText(point);
+
+            isOnDisplayPoint = false;
         }
 
-        SetValueText();
+        //for (iCount = 0; iCount < displayPointList_A.Count; iCount++)
+        //{
+
+        //    chart.DataSource.AddPointToCategoryRealtime("PointA", iCount, displayPointList_A[iCount], changeValueTime * 2);
+        //    chart.DataSource.AddPointToCategoryRealtime("PointB", iCount, displayPointList_B[iCount], changeValueTime * 2);
+        //    chart.DataSource.AddPointToCategoryRealtime("PointC", iCount, displayPointList_C[iCount], changeValueTime * 2);
+        //    chart.DataSource.AddPointToCategoryRealtime("PointD", iCount, displayPointList_D[iCount], changeValueTime * 2);
+
+        //    StartCoroutine(ChangeCoilIntencity(iCount));
+
+        //    yield return new WaitForSeconds(1f);
+        //    yield return new WaitUntil(() => !isOnChangeCoilIntencity);
+        //    yield return new WaitUntil(() => GameManager.Insatance.isGraphOn);
+            
+        //    SetValueText(iCount);
+        //}
+
+        isOnDisplayPoint = false;
+    }
+
+    public bool breakDisplayPointCoroutine = false;
+    public void DisplayPointImmediate()
+    {
+        breakDisplayPointCoroutine = true;
+
+        for (int i = 0; i < 2001; i++)
+        {
+            int point;
+
+            if (i == 2000)
+            {
+                point = displayPointList_A.Count - 1;
+            }
+            else
+            {
+                point = (int)(displayPointList_A.Count / 2000 * i);
+            }
+
+            chart.DataSource.AddPointToCategory("PointA", point, displayPointList_A[point]);
+            chart.DataSource.AddPointToCategory("PointB", point, displayPointList_B[point]);
+            chart.DataSource.AddPointToCategory("PointC", point, displayPointList_C[point]);
+            chart.DataSource.AddPointToCategory("PointD", point, displayPointList_D[point]);
+
+            SetValueText(i);
+        }
     }
 
     IEnumerator CylenderTurn()
@@ -128,6 +234,8 @@ public class GraphEditor : MonoBehaviour
 
     bool isClickCore = false;
     //bool isFirstClick = false;
+    bool isTopSide = false;
+    bool isBottomSide = false;
 
     IEnumerator CylenderTurnUseMouse()
     {
@@ -139,17 +247,28 @@ public class GraphEditor : MonoBehaviour
             {
                 //초기화
                 isClickCore = false;
-              //  isFirstClick = true;
+                isTopSide = false;
+                isBottomSide = false;
+                //  isFirstClick = true;
             }
 
             yield return new WaitUntil(() => Input.GetMouseButton(0));
 
-            ray = GameManager.Inatance.mainCamera.ScreenPointToRay(Input.mousePosition);
+            ray = GameManager.Insatance.mainCamera.ScreenPointToRay(Input.mousePosition);
 
             if (Physics.Raycast(ray, out hit))
             {
-                if (hit.transform.CompareTag("MeltingCore"))
+                if (hit.transform.CompareTag("MeltingCore") || hit.transform.CompareTag("MeltingCoreTop") || hit.transform.CompareTag("MeltingCoreBottom"))
                 {
+                    if (hit.transform.CompareTag("MeltingCoreTop") && !isClickCore)
+                    {
+                        isTopSide = true;
+                    }
+                    else if (hit.transform.CompareTag("MeltingCoreBottom") && !isClickCore)
+                    {
+                        isBottomSide = true;
+                    }
+
                     isClickCore = true;
                 }
             }
@@ -168,9 +287,21 @@ public class GraphEditor : MonoBehaviour
 
                 moveVec = curMousePos - lastMousePos;
 
+                moveVec *= rotateSpeed * Time.deltaTime;
 
-
-                meltingCore.transform.Rotate(new Vector3(moveVec.y, moveVec.x, moveVec.y) * rotateSpeed * Time.deltaTime * -1f);
+                if (isTopSide)
+                {
+                    meltingCore.transform.Rotate(0f, 0f, moveVec.x * -1f, Space.World);
+                }
+                else if (isBottomSide)
+                {
+                    meltingCore.transform.Rotate(0f, 0f, moveVec.x, Space.World);
+                }
+                else
+                {
+                    meltingCore.transform.Rotate(0f, moveVec.x * -1, 0f, Space.World);
+                    meltingCore.transform.Rotate(moveVec.y, 0f, 0f, Space.World);
+                }
 
                 lastMousePos = curMousePos;
             }
@@ -180,6 +311,15 @@ public class GraphEditor : MonoBehaviour
 
     }
 
+    public void SetDefaultCoreMesh()
+    {
+        var mesh = meltingCore.GetComponentsInChildren<MeshRenderer>();
+
+        foreach (var item in mesh)
+        {
+            item.enabled = true;
+        }
+    }
 
     public Vector3 metingCoreOriginAngle;
     public void ResetCore()
@@ -210,8 +350,6 @@ public class GraphEditor : MonoBehaviour
 
         isOnChangeCoilIntencity = true;
 
-        Debug.Log("코루틴 시작됨");
-
         Color coilAEmission;
         Color coilBEmission;
         Color coilCEmission;
@@ -231,11 +369,6 @@ public class GraphEditor : MonoBehaviour
         {
             coilAMesh.sharedMaterial.SetColor("_EmissiveColor", lastCoilAEmission - (lastCoilAEmission - coilAEmission) * i * 0.01f);
             Color a = (lastCoilAEmission - coilAEmission) * i * 0.01f;
-            Debug.Log(i + "번째" + coilAMesh.sharedMaterial.GetColor("_EmissiveColor"));
-            Debug.Log(lastCoilAEmission);
-            Debug.Log(coilAEmission);
-            //Debug.Log("LastCoilAEmission" + lastCoilAEmission);
-            //Debug.Log("CoilAEmission" + coilAEmission);
             coilBMesh.sharedMaterial.SetColor("_EmissiveColor", lastCoilBEmission - (lastCoilBEmission - coilBEmission) * i * 0.01f);
             coilCMesh.sharedMaterial.SetColor("_EmissiveColor", lastCoilCEmission - (lastCoilCEmission - coilCEmission) * i * 0.01f);
             coilDMesh.sharedMaterial.SetColor("_EmissiveColor", lastCoilDEmission - (lastCoilDEmission - coilDEmission) * i * 0.01f);
@@ -254,45 +387,39 @@ public class GraphEditor : MonoBehaviour
     float maxValue;
     float minValue;
 
-    public void SetValueText()
+    public void SetValueText(int num)
     {
-        maxValue = 0;
-        minValue = 9999;
-
-        for (int i = 0; i < 11; i++)
+        if (displayPointList_A[num] > maxValue)
         {
-            if (displayPointList_A[i] > maxValue)
-            {
-                maxValue = displayPointList_A[i];
-            }
-            if (displayPointList_A[i] < minValue)
-            {
-                minValue = displayPointList_A[i];
-            }
-            if (displayPointList_B[i] > maxValue)
-            {
-                maxValue = displayPointList_B[i];
-            }
-            if (displayPointList_B[i] < minValue)
-            {
-                minValue = displayPointList_B[i];
-            }
-            if (displayPointList_C[i] > maxValue)
-            {
-                maxValue = displayPointList_C[i];
-            }
-            if (displayPointList_C[i] < minValue)
-            {
-                minValue = displayPointList_C[i];
-            }
-            if (displayPointList_D[i] > maxValue)
-            {
-                maxValue = displayPointList_D[i];
-            }
-            if (displayPointList_D[i] < minValue)
-            {
-                minValue = displayPointList_D[i];
-            }
+            maxValue = displayPointList_A[num];
+        }
+        if (displayPointList_A[num] < minValue)
+        {
+            minValue = displayPointList_A[num];
+        }
+        if (displayPointList_B[num] > maxValue)
+        {
+            maxValue = displayPointList_B[num];
+        }
+        if (displayPointList_B[num] < minValue)
+        {
+            minValue = displayPointList_B[num];
+        }
+        if (displayPointList_C[num] > maxValue)
+        {
+            maxValue = displayPointList_C[num];
+        }
+        if (displayPointList_C[num] < minValue)
+        {
+            minValue = displayPointList_C[num];
+        }
+        if (displayPointList_D[num] > maxValue)
+        {
+            maxValue = displayPointList_D[num];
+        }
+        if (displayPointList_D[num] < minValue)
+        {
+            minValue = displayPointList_D[num];
         }
 
         maxTemperatureText.text = maxValue + "°C";
